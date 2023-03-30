@@ -1,0 +1,16 @@
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/multi_option.css') }}">
+<div style='text-align:center'>
+    {% for message in messages %}
+    <div class='message'>
+        <p cols='50' style='text-align:center'>{{ message }}</p>
+    </div>
+    {% endfor %}
+</div>
+<div class="options-container">
+    {% for option in options %}
+    <div class="option">
+      <p>{{option}}</p>
+      <button>Select</button>
+    </div>
+    {% endfor %}
+</div>

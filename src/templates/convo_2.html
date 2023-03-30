@@ -1,0 +1,143 @@
+<html>
+
+<head>
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        table {
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid black;
+        }
+        pre code {
+            display: block;
+            background: rgb(238, 236, 236);
+            color: white;
+            white-space: pre;
+            -webkit-overflow-scrolling: touch;
+            overflow-x: scroll;
+            max-width: 100%;
+            min-width: 100px;
+            min-height: 50px;
+            padding: 0;
+        }
+
+        .sub_content_box {
+            display: "block";
+            width: 75%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .small_sep {
+            background-color: #ababab;
+            height: 1px;
+        }
+
+        .user_message_box {
+            display: flex;
+            text-align: "center";
+            padding-bottom: 10px;
+            background-color: #f2f2f2;
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+        }
+
+        .bot_message_box {
+            display: flex;
+            text-align: "center";
+            padding-bottom: 10px;
+            background-color: #e2dbdb;
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+        }
+
+        .speaker_box {
+            flex: 1;
+        }
+
+        .markdown_box {
+            flex: 15;
+            padding-left: 10px;
+        }
+
+        .textbox_container {
+            display: block;
+            justify-content: center;
+            align-items: center;
+            padding-bottom: 10px;
+            background-color: #f2f2f2;
+            margin-left: auto;
+            margin-right: auto;
+
+        }
+
+        .submit-button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        textarea {
+            display: flex;
+            width: 75%;
+            min-height: 100px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="full_container">
+        {% for message in messages %}
+        {% if message["speaker"] == "User" %}
+        <div class="user_message_box">
+            <div class="sub_content_box">
+                <div class="speaker_box">
+                    <strong>{{ message["speaker"]|safe }}</strong>
+                </div>
+                <div class="markdown_box">
+                    {{ message["html"]|safe }}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="bot_message_box">
+            <div class="sub_content_box">
+                <div class="speaker_box">
+                    <strong>{{ message["speaker"]|safe }}</strong>
+                </div>
+                <div class="markdown_box">
+                    {{ message["html"]|safe }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        <div class="small_sep"></div>
+        {% endfor %}
+
+        <div class="textbox_container">
+        <form method="POST">
+            <textarea name="text"></textarea>
+            <div class="submit-button">
+                <input type="submit">
+            </div>
+        </div>
+        </form>
+        <form action="/clear" method="get">
+            <input type="submit" value="Back">
+        </form>
+
+    </div>
+</body>
+
+</html>

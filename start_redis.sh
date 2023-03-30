@@ -1,0 +1,1 @@
+docker run -d --name glados-redis --network glados-net redis
