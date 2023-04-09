@@ -97,7 +97,7 @@ def conversation():
         bot_response = bot.converse(**args)
     # TODO : Bare exception. What is the error when it OOMs? Is it reliable?
     except:
-        bot_response = f"ERROR : Bot code errored- likely OOM from longer conversation. Consider going to http://jamesconley.net:5950/clear or clicking the back button to reset the thread"
+        bot_response = f"ERROR : Bot code errored- likely OOM from longer conversation. Consider going to /clear or clicking the back button to reset the thread"
     
     # Log stuff
     logger.debug(f"{time.time()} : {request.remote_addr} : Received request with text `{new_text}`\n")
