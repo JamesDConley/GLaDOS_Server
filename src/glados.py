@@ -25,7 +25,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 logger = logging.getLogger(__name__)
 
 class GLaDOS:
-    def __init__(self, path, stop_phrase="User :",  device="cuda", half=False, cache_dir="models/hface_cache", use_deepspeed=True, int8=False, max_length=2048, multi_gpu=False):
+    def __init__(self, path, stop_phrase="User :",  device="cuda", half=False, cache_dir="models/hface_cache", use_deepspeed=False, int8=False, max_length=2048, multi_gpu=False):
         """AI is creating summary for __init__
 
         Args:
@@ -34,7 +34,7 @@ class GLaDOS:
             device (str, optional): Pytorch device "cuda", "cpu" or similar. Defaults to "cuda".
             half (bool, optional): Whether to half the model after loading it. Most loaded models are already in fp16 (half precision). Defaults to False.
             cache_dir (str, optional): Location of the huggingface cache. (Useful for usage within docker.) Defaults to "models/hface_cache".
-            use_deepspeed (bool, optional): Experimental, don't recommend. Defaults to True.
+            use_deepspeed (bool, optional): Experimental, don't recommend. Defaults to False.
             int8 (bool, optional): BROKEN/WIP. Defaults to False.
             max_length (int, optional): The maximum number of tokens the model can handle. Defaults to 2048.
             multi_gpu (bool, optional): If true the model will utilize all available GPUs. Defaults to False.
@@ -63,10 +63,10 @@ class GLaDOS:
             model = PeftModel.from_pretrained(model, path, cache_dir=cache_dir)
             # TODO : Does this do anything? Model should already be fp16. Would be nice to remove another argument from the long list
             if half:
-                self.model.half()
-                logger.info("Halved Model")
+                model.half()
+                logger.debug("Halved Model")
             if device is not None:
-                self.model.to(device)
+                model.to(device)
         
         # Make sure it's in eval mode
         model.eval()
@@ -145,9 +145,9 @@ class GLaDOS:
                 base_kwargs[key] = item
 
         
-        logger.info(f"Base length : {len(self.tokenizer(text, return_tensors='pt').input_ids[0])}")
+        logger.debug(f"Base length : {len(self.tokenizer(text, return_tensors='pt').input_ids[0])}")
         input_ids = self.tokenizer(text, return_tensors="pt", truncation=True, max_length=self.max_length - base_kwargs["max_new_tokens"]).input_ids.to(self.device)
-        logger.info(f"Truncated length : {len(input_ids[0])} ")
+        logger.debug(f"Truncated length : {len(input_ids[0])} ")
         with torch.no_grad():
             with torch.cuda.amp.autocast():
                 gen_tokens = self.model.generate(

@@ -12,7 +12,7 @@ from waitress import serve
 
 # Local Imports
 from glados import GLaDOS
-from md_utils import htmlify_convo basicify_convo
+from md_utils import htmlify_convo, basicify_convo
 
 # Conversations are stored compressed
 from compression import encode_str, decode_str, encode_obj, decode_obj
@@ -37,7 +37,7 @@ app.secret_key = 'as89dvhuionasdjkfg'
 Session(app)
 
 LOG_FILE = "server_logs.log"
-bot = GLaDOS("models/GLaDOS20B", use_deepspeed=False, half=True, int8=False, multi_gpu=False)
+bot = GLaDOS("models/GLaDOS20B", multi_gpu=False)
 
 @app.route('/')
 def splash_page():
