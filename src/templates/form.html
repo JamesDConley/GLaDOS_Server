@@ -1,6 +1,6 @@
 <form method="POST" style='text-align:center'>
     <div style='text-align:center'>
-    <h1>Enter text below to run through GLaDOS V2.3, a small(ish) chat bot.</h1>
+    <h1>Enter text below to run through GLaDOS V2.4, a chat bot.</h1>
     </div>
     <div class="textbox-container" style='text-align:center'>
       <textarea name="text" rows="10" cols="100"></textarea>
@@ -15,6 +15,7 @@
         GLaDOSv2 : 1.3 Billion parameters. Trained with LoRA (R=8). Markdown support!<br>
         GLaDOSv2.2 : 6 Billion parameters. Trained with LoRA (R=4). Markdown support!<br>
         GLaDOSv2.3 : 6.9 Billion parameters. Trained with LoRA (R=16). More efficient Pythia tokenizer!<br>
+        GLaDOSv2.4 : 20 Billion parameters. Better base model! Same everything else!<br>
         <br><br>
         GLaDOS, is not very bright*.<br>
         Future versions will take advantage of more data and more effective training techniques to improve results.
@@ -22,6 +23,9 @@
     <div style="font-size:10px">
     <br><br><br>
     * Any information produced by the model is likely not true.<br>
+    * GLaDOS currently loses track of information more than ~1500 tokens back <br>
+    * GLaDOS uses sampling during generation so the same prompt may produce different results <br>
+    * There is a bug in GLaDOS that affects the formatting of poetry/songs and other items. <br>
     </div>
 </form>
   

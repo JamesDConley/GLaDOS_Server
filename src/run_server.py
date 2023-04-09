@@ -12,7 +12,7 @@ from flask import Flask, request, render_template, redirect, url_for, session
 from flask_session import Session
 
 # Local Imports
-from clean_peft_model import GLaDOS
+from simple_peft_model import GLaDOS
 from compression import encode_str, decode_str, encode_obj, decode_obj
 
 from waitress import serve
@@ -31,7 +31,8 @@ app.secret_key = 'as89dvhuionasdjkfg'
 Session(app)
 
 LOG_FILE = "server_logs.log"
-bot = GLaDOS("models/pythia_6b_r16_epoch1_54261/pytorch_model.bin", base_model_path="EleutherAI/pythia-6.9b-deduped", use_deepspeed=False, half=True, int8=False)
+bot = GLaDOS("models/GLaDOS20B", use_deepspeed=False, half=True, int8=False, multi_gpu=False)
+#bot = GLaDOS("models/pythia_6b_r16_epoch1_54261/pytorch_model.bin", base_model_path="/app/models/pythia69deduped/snapshots/0fa212c338c99d6fce556886a8c1dc7132e572e0", use_deepspeed=False, half=True, int8=False)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -113,15 +114,16 @@ def conversation():
     args = {
         "user_input" : new_text, 
         "conversation_history" : previous_convo, 
-        "kwargs" : {"max_new_tokens":512, "do_sample":True, "temperature":1.2, "num_beams":2, "no_repeat_ngram_size" : 12, "top_k" : 50}
+        "kwargs" : {"max_new_tokens":512, "do_sample":True, "temperature":1.0, "num_beams":1, "no_repeat_ngram_size" : 12, "top_k" : 50}
     }
-    
-    bot_response = bot.converse(**args)
-
+    try:
+        bot_response = bot.converse(**args)
+    except:
+        bot_response = f"ERROR : Bot code errored- likely OOM from longer conversation. Consider going to http://jamesconley.net:5950/clear or clicking the back button to reset the thread"
     # Log stuff
-    write_log(f"{time.time()} : {request.remote_addr} : Received request with text `{new_text}`\n")
-    write_log(f"{time.time()} : {request.remote_addr} : Previous text was `{previous_convo}`\n")
-    write_log(f"{time.time()} : {request.remote_addr} : Model response : `{bot_response}`\n")
+    # write_log(f"{time.time()} : {request.remote_addr} : Received request with text `{new_text}`\n")
+    # write_log(f"{time.time()} : {request.remote_addr} : Previous text was `{previous_convo}`\n")
+    # write_log(f"{time.time()} : {request.remote_addr} : Model response : `{bot_response}`\n")
 
     # Combine the full convo
     if previous_convo is None:

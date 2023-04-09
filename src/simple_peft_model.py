@@ -7,6 +7,7 @@ import torch
 from torch import nn
 from stop_criteria import StopOnStr
 from peft import get_peft_model, LoraConfig, TaskType
+from peft import PeftModel, PeftConfig
 
 warnings.filterwarnings("ignore")
 
@@ -16,43 +17,50 @@ from transformers.deepspeed import HfDeepSpeedConfig
 from transformers import GPTNeoXConfig, GPTNeoXModel
 
 import deepspeed
+from md_utils import fix_lines
+
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 logger = logging.getLogger(__name__)
 
 class GLaDOS:
-    def __init__(self, path, stop_phrase="User :", base_model_path = "EleutherAI/gpt-neo-1.3B",  device="cuda", half=False, cache_dir="models/hface_cache", use_deepspeed=True, int8=False, max_length=2048, multi_gpu=True):
+    def __init__(self, path, stop_phrase="User :",  device="cuda", half=False, cache_dir="models/hface_cache", use_deepspeed=True, int8=False, max_length=2048, multi_gpu=True):
+        
+        config = PeftConfig.from_pretrained(path)
+        base_model_path = config.base_model_name_or_path
+        
+        
         if int8:
+            # THIS IS NOT TESTED
             model = AutoModelForCausalLM.from_pretrained(base_model_path, return_dict=True, cache_dir=cache_dir, device_map="auto", torch_dtype=torch.float16, load_in_8bit=True)
+            half=False
+            model = PeftModel.from_pretrained(model, path, return_dict=True, cache_dir=cache_dir, device_map="auto", torch_dtype=torch.float16, load_in_8bit=True)
         elif multi_gpu:
-             model = AutoModelForCausalLM.from_pretrained(base_model_path, cache_dir=cache_dir, device_map="auto", torch_dtype=torch.float16)
+            model = AutoModelForCausalLM.from_pretrained(base_model_path, cache_dir=cache_dir, device_map="auto", torch_dtype=torch.float16)
+            half=False
+            model = PeftModel.from_pretrained(model, path, cache_dir=cache_dir, device_map="auto", torch_dtype=torch.float16)
         else:
+            # TODO : Create custom device map to load on single GPU without using intermediate 
             model = AutoModelForCausalLM.from_pretrained(base_model_path, cache_dir=cache_dir, torch_dtype=torch.float16)
+            model = PeftModel.from_pretrained(model, path, cache_dir=cache_dir)
+
+        
+
         self.device = device
         self.half = half
         self.base_model_path = base_model_path
         self.model_path = path
         self.stop_phrase = stop_phrase
         self.max_length = max_length
-        peft_config = LoraConfig(
-            task_type=TaskType.CAUSAL_LM, inference_mode=True, r=16, lora_alpha=32, lora_dropout=0.1
-        )
-        logger.info("Built PEFT Config.")
-        model = get_peft_model(model, peft_config)
-        logger.info("Converted model.")
         model.eval()
         self.model = model
         if half:
             self.model.half()
             logger.info("Halved Model")
-        logger.info(f"Loading State Dict...")
-        self.model.load_state_dict(torch.load(self.model_path))
-        logger.info(f"Loaded State Dict.")
-        logger.info(f"Saving...")
-        self.model.save_pretrained("models/GLaDOS20B")
-        logger.info(f"Saved!")
-        self.model.to(device)
+
+        if device is not None:
+            self.model.to(device)
         self.tokenizer = AutoTokenizer.from_pretrained(base_model_path, truncation_side="left")
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.stop_token_seqs = [StopOnStr(stop_phrase, self.tokenizer)]
@@ -78,11 +86,10 @@ class GLaDOS:
         base_kwargs = {
             "num_beams" : 16,
             "stopping_criteria" : self.stop_token_seqs,
-            "max_new_tokens" : 250,
+            "max_new_tokens" : 256,
             "pad_token_id" : self.tokenizer.eos_token_id,
-            "repetition_penalty" : 2.0,
             "bad_words_ids" : self.bad_token_seqs,
-            "no_repeat_ngram_size" : 5,
+            "no_repeat_ngram_size" : 12,
             
         }
         # Update defaults
@@ -104,7 +111,7 @@ class GLaDOS:
         gen_tokens = gen_tokens[:, input_ids.shape[-1]:]
         gen_text = self.tokenizer.batch_decode(gen_tokens)[0]
         #gen_text = gen_text[len(self.tokenizer.batch_decode([input_ids]))]
-        return gen_text
+        return fix_lines(gen_text)
 
     def converse(self, user_input, conversation_history=None, kwargs=None, truncate=True, speaker="User"):
         if conversation_history is not None:
