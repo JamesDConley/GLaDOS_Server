@@ -1,5 +1,4 @@
 FROM nvidia/cuda:12.1.0-devel-ubuntu20.04
-#FROM nvidia/cuda:12.0.0-devel-ubuntu22.04
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update --yes && apt-get upgrade --yes
 RUN apt-get install vim emacs nano software-properties-common gnupg2 python3-pip --yes
