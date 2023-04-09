@@ -1,4 +1,5 @@
-
+# This is a made up page for testing the UI
+# It is not used
 @app.route("/test")
 def test():
     sample_mds = [
@@ -37,7 +38,5 @@ print("Hello World!")
     ]
     for item in sample_mds:
         item["html"] = commonmark_to_html(item["markdown"])
-    #speakers = [item["speaker"] for item in sample_mds]
-    #html_blurbs = [ for item in sample_mds]
 
-    return render_template("convo_2.html",  messages=sample_mds)
+    return render_template("conversation_page.html",  messages=sample_mds)
