@@ -11,7 +11,7 @@ from flask_session import Session
 from waitress import serve
 
 # Local Imports
-from simple_peft_model import GLaDOS
+from glados import GLaDOS
 from md_utils import htmlify_convo basicify_convo
 
 # Conversations are stored compressed
