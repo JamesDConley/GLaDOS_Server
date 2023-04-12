@@ -1,3 +1,5 @@
+import re
+import pandoc
 def fix_lines(base_md):
     """Doubles newlines outside of code blocks to fix formatting issue from model training code.
 
@@ -12,10 +14,19 @@ def fix_lines(base_md):
     fixed_sections = []
     for i, sec in enumerate(sections):
         if i % 2 == 0:
-            sec = sec.replace("\n", "\n\n")
+            sec = replace_newline_with_br(sec)
         fixed_sections.append(sec)
     return "```".join(fixed_sections)
 
+def replace_newline_with_br(text):
+    replace_spots = []
+    for i, char in enumerate(text.strip()):
+        if char == "\n" and (i > 0 and text[i-1]!= "\n") and (i < len(text) - 1 and text[i+1]!= "\n"):
+            replace_spots.append(i)
+    replace_spots.reverse()
+    for i in replace_spots:
+        text = text[:i] + "<br>\n" + text[i+1:]
+    return text
 
 def commonmark_to_html(md_text):
     """Convert the given markdown text to html with prettyprints for code blocks
@@ -26,6 +37,7 @@ def commonmark_to_html(md_text):
     Returns:
         str: HTML str output
     """
+    md_text = fix_lines(md_text)
     pd_data = pandoc.read(md_text, format="gfm")
     html_data = pandoc.write(pd_data, format="html")
     html_data = re.sub("<code[^>]*>", '<code class="prettyprint">', html_data)

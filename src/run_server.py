@@ -12,7 +12,7 @@ from waitress import serve
 
 # Local Imports
 from glados import GLaDOS
-from md_utils import htmlify_convo basicify_convo
+from md_utils import htmlify_convo, basicify_convo
 
 # Conversations are stored compressed
 from compression import encode_str, decode_str, encode_obj, decode_obj
@@ -37,7 +37,7 @@ app.secret_key = 'as89dvhuionasdjkfg'
 Session(app)
 
 LOG_FILE = "server_logs.log"
-bot = GLaDOS("models/GLaDOS20B", use_deepspeed=False, half=True, int8=False, multi_gpu=False)
+bot = GLaDOS("models/neox_20b_full", multi_gpu=True)
 
 @app.route('/')
 def splash_page():
@@ -91,13 +91,13 @@ def conversation():
     args = {
         "user_input" : new_text, 
         "conversation_history" : previous_convo, 
-        "kwargs" : {"max_new_tokens":512, "do_sample":True, "temperature":1.0, "num_beams":1, "no_repeat_ngram_size" : 12, "top_k" : 50}
+        "kwargs" : {"max_new_tokens":512, "do_sample":True, "temperature":1.0, "num_beams":2, "no_repeat_ngram_size" : 5, "top_k" : 50}
     }
-    try:
-        bot_response = bot.converse(**args)
+    #try:
+    bot_response = bot.converse(**args)
     # TODO : Bare exception. What is the error when it OOMs? Is it reliable?
-    except:
-        bot_response = f"ERROR : Bot code errored- likely OOM from longer conversation. Consider going to http://jamesconley.net:5950/clear or clicking the back button to reset the thread"
+    #except:
+    # bot_response = f"ERROR : Bot code errored- likely OOM from longer conversation. Consider going to /clear or clicking the back button to reset the thread"
     
     # Log stuff
     logger.debug(f"{time.time()} : {request.remote_addr} : Received request with text `{new_text}`\n")
