@@ -5,7 +5,7 @@ This repo includes the model itself and a basic web server to chat with it.
 
 
 ## Motivation
-Similar models exist but often utilize LLAMA which is only available under a noncommercial license. GLaDOS avoids this by utilizing EleutherAI's/togethercomputers apach 2.0 licensed base models and CC0 data.
+Similar models exist but often utilize LLAMA which is only available under a noncommercial license. GLaDOS avoids this by utilizing EleutherAI's/togethercomputers apache 2.0 licensed base models and CC0 data.
 
 Additionally, GLaDOS is designed to be run fully standalone so you don't need to worry about your information being collected by a third party.
 
