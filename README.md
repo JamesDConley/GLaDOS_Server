@@ -72,7 +72,7 @@ Q : How does the model handle formatting?
 A : GLaDOS uses a slight variation on github flavored markdown to create lists tables and code blocks. Extra tags are added by the webserver to prettify the code blocks and tweak other small things.
 
 
-Acknowledgements:
+# Acknowledgements:
 
 Big thanks to EleutherAI for GPT-NeoX, togethercomputer for GPT-Neoxt-chat-base and ShareGPT/RyokoAI for ShareGPT data!
 
