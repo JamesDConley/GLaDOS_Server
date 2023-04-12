@@ -25,7 +25,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 logger = logging.getLogger(__name__)
 
 class GLaDOS:
-    def __init__(self, path, stop_phrase="User :",  device="cuda", half=False, cache_dir="models/hface_cache", use_deepspeed=False, int8=False, max_length=2048, multi_gpu=False):
+    def __init__(self, path, stop_phrase="User :\n",  device="cuda", half=False, cache_dir="models/hface_cache", use_deepspeed=False, int8=False, max_length=2048, multi_gpu=False):
         """AI is creating summary for __init__
 
         Args:
@@ -157,7 +157,7 @@ class GLaDOS:
         # slice out the input sequence
         gen_tokens = gen_tokens[:, input_ids.shape[-1]:]
         gen_text = self.tokenizer.batch_decode(gen_tokens)[0]
-        return fix_lines(gen_text)
+        return gen_text
 
     def converse(self, user_input, conversation_history=None, kwargs=None, truncate=True, speaker="User", bot="GLaDOS"):
         """Helper function for having a conversation with the bot
