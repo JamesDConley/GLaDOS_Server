@@ -1,5 +1,5 @@
 # What is GLaDOS?
-GLaDOS is a 20B model tuned to provide an open-source experience _similar_ _to_ ChatGPT. 
+GLaDOS is an open source/permissively licensed 20B model tuned to provide an open-source experience _similar_ _to_ ChatGPT. 
 
 This repo includes the model itself and a basic web server to chat with it.
 
