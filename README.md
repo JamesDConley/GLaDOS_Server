@@ -31,7 +31,7 @@ or
 ```
 accelerate launch --multi_gpu --mixed_precision=fp16 --num_processes=1 src/run_server.py
 ```
-
+One the model comes online it will be available at localhost:5950 and will print a URL you can open in your browser.
 
 The first time the model runs it will download the base model, which is `togethercomputer/GPT-NeoXT-Chat-Base-20B`.
 
