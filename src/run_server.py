@@ -42,7 +42,7 @@ Session(app)
 
 LOG_FILE = "server_logs.log"
 
-bot = GLaDOS(args.model, multi_gpu=False, token=args.token, multi_gpu=args.multi_gpu)
+bot = GLaDOS(args.model, token=args.token, multi_gpu=args.multi_gpu)
 bot.add_stop_phrase("User:")
 
 @app.route('/')

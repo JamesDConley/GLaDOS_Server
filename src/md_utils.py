@@ -20,7 +20,10 @@ def fix_lines(base_md):
         if i % 2 == 0:
             sec = replace_newline_with_br(sec)
         fixed_sections.append(sec)
+    
     updated_md = "```".join(fixed_sections)
+    logger.debug(f"Original markdown : {base_md}")
+    logger.debug(f"Updated markdown : {updated_md}")
     return updated_md
 
 
@@ -48,7 +51,6 @@ def identify_break_points(text):
     return replace_spots
 
 def replace_newline_with_br(text):
-    text = text.strip()
     replace_spots = identify_break_points(text)
     replace_spots.reverse()
     for i in replace_spots:
