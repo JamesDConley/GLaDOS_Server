@@ -25,7 +25,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 logger = logging.getLogger(__name__)
 
 class GLaDOS:
-    def __init__(self, path, stop_phrase="User :\n",  device="cuda", half=False, cache_dir="models/hface_cache", use_deepspeed=False, int8=False, max_length=2048, multi_gpu=False):
+    def __init__(self, path, stop_phrase="User :\n",  device="cuda", half=False, cache_dir="models/hface_cache", use_deepspeed=False, int8=False, max_length=2048, multi_gpu=False, token=None, better_transformer=False):
         """AI is creating summary for __init__
 
         Args:
@@ -45,21 +45,24 @@ class GLaDOS:
         # TODO : Make int8 work
         if int8:
             # THIS IS NOT TESTED
-            model = AutoModelForCausalLM.from_pretrained(base_model_path, return_dict=True, cache_dir=cache_dir, device_map="auto", torch_dtype=torch.float16, load_in_8bit=True)
+            model = AutoModelForCausalLM.from_pretrained(base_model_path, return_dict=True, cache_dir=cache_dir, device_map="auto", torch_dtype=torch.float16, load_in_8bit=True, use_auth_token=token)
             # Less than half!
             device = None
-            model = PeftModel.from_pretrained(model, path, return_dict=True, cache_dir=cache_dir, device_map="auto", torch_dtype=torch.float16, load_in_8bit=True)
+            model = PeftModel.from_pretrained(model, path, return_dict=True, cache_dir=cache_dir, device_map="auto", torch_dtype=torch.float16, load_in_8bit=True, use_auth_token=token)
         
         # TODO : Make multi_gpu work (It used to work, when did it break?)
         elif multi_gpu:
-            model = AutoModelForCausalLM.from_pretrained(base_model_path, cache_dir=cache_dir, device_map="auto", torch_dtype=torch.float16)
+            model = AutoModelForCausalLM.from_pretrained(base_model_path, cache_dir=cache_dir, device_map="auto", torch_dtype=torch.float16, use_auth_token=token)
             # Model should already be half
             half=True
             # Device map will be set automatically above, setting another device map break it
-            model = PeftModel.from_pretrained(model, path, cache_dir=cache_dir, device_map="auto", torch_dtype=torch.float16)
+            model = PeftModel.from_pretrained(model, path, cache_dir=cache_dir, device_map="auto", torch_dtype=torch.float16, use_auth_token=token)
         else:
             # TODO : Create custom device map to load on single GPU without using intermediate 
-            model = AutoModelForCausalLM.from_pretrained(base_model_path, cache_dir=cache_dir, torch_dtype=torch.float16)
+            model = AutoModelForCausalLM.from_pretrained(base_model_path, cache_dir=cache_dir, torch_dtype=torch.float16, use_auth_token=token)
+            if better_transformer:
+                logger.info("Converting model to better transformer model for speedup...")
+                model = model.to_bettertransformer()
             model = PeftModel.from_pretrained(model, path, cache_dir=cache_dir)
             # TODO : Does this do anything? Model should already be fp16. Would be nice to remove another argument from the long list
             if half:
@@ -68,9 +71,12 @@ class GLaDOS:
             if device is not None:
                 model.to(device)
         
+       
         # Make sure it's in eval mode
         model.eval()
         
+        
+
         # Bookkeeping
         self.device = device
         self.base_model_path = base_model_path
@@ -80,7 +86,7 @@ class GLaDOS:
         self.model = model
         
         # Setup tokenizer
-        self.tokenizer = AutoTokenizer.from_pretrained(base_model_path, truncation_side="left")
+        self.tokenizer = AutoTokenizer.from_pretrained(base_model_path, truncation_side="left", use_auth_token=token, cache_dir=cache_dir)
         self.tokenizer.pad_token = self.tokenizer.eos_token
         
         # Ban the model from generating certain phrases
@@ -133,7 +139,7 @@ class GLaDOS:
         base_kwargs = {
             "num_beams" : 16,
             "stopping_criteria" : self.stop_token_seqs,
-            "max_new_tokens" : 256,
+            "max_new_tokens" : 1024,
             "pad_token_id" : self.tokenizer.eos_token_id,
             "bad_words_ids" : self.bad_token_seqs,
             "no_repeat_ngram_size" : 12,
