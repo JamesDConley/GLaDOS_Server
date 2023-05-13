@@ -15,6 +15,7 @@ First create a network for the redis, and then start the redis server needed to 
 ```
 docker network create glados-net
 ```
+```
 bash start_redis.sh
 ```
 Second, build and run the GLaDOS server image/container with
