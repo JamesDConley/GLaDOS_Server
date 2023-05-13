@@ -11,7 +11,9 @@ Additionally, GLaDOS is designed to be run fully standalone so you don't need to
 
 GLaDOS is designed to run with docker. Instructions for installing docker https://docs.docker.com/get-docker/
 
-First start the redis server needed to cache conversations
+First create a network for the redis, and then start the redis server needed to cache conversations
+```
+docker network create glados-net
 ```
 bash start_redis.sh
 ```
