@@ -35,7 +35,7 @@ will run the 20 billion GPT-NeoX based model.
 Various model options are listed below
 
 ## Model Options
-Each model is fine-tuned with LoRA on the GLaDOS dataset to produce conversation, github flavored markdown.\
+Each model is fine-tuned with LoRA on the GLaDOS dataset to produce conversation as github flavored markdown.\
 Bigger models require more video memory to run, but also perform better.\
 The default model is redpajama7b_base
 
