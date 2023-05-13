@@ -27,11 +27,32 @@ Then, from inside this container run
 ```
 python src/run_server.py
 ```
-or
+This will run the server with default settings of the 7b RedPajama based GLaDOS model.
+To run a different model you can pass the model path. For example
 ```
-accelerate launch --multi_gpu --mixed_precision=fp16 --num_processes=1 src/run_server.py
+python src/run_server.py --model models/glados_together_20b
+```
+will run the 20 billion GPT-NeoX based model.
+
+Various model options are listed below
+
+## Model Options
+Each model is fine-tuned with LoRA on the GLaDOS dataset to produce conversation, github flavored markdown.\
+Bigger models require more video memory to run, but also perform better.\
+The default model is redpajama7b_base
+
+NOTE : To run the starcoder model you need to pass a token to src/run_server.py in order to download the model.
+Ex.
+```
+python src/run_server.py --model models/glados_starcoder --token <YOUR TOKEN HERE>
 ```
 
+| Model Path | Base Model | Parameters | License | Strengths |
+| ----- | --- | --- | --- | --- |
+| models/glados_together_20b | togethercomputer/GPT-NeoXT-Chat-Base-20B | 20 Billion | Apache 2.0 | Best Overall Performance |
+| models/glados_redpajama7b_base (default) | togethercomputer/RedPajama-INCITE-Base-7B-v0.1 | 6.9 Billion | Apache 2.0 | Most resource efficient with good performance. (Default) |
+| models/glados_starcoder | bigcode/starcoder | 15.5 Billion | BigCode OpenRAIL-M v1 | Best code & related performance |
+| models/neox_20b_full (deprecated) | togethercomputer/GPT-NeoXT-Chat-Base-20B | 20 Billion | Apache 2.0 | Old version of glados_together_20b |
 
 The first time the model runs it will download the base model, which is `togethercomputer/GPT-NeoXT-Chat-Base-20B`.
 
@@ -41,6 +62,12 @@ If you want to leave the server running you can build the container inside tmux,
 
 ## License
 Apache 2.0 License, see LICENSE.md
+
+
+
+
+Note the starcoder basemodel uses an OpenRAIL license, and usage of the starcoder based model may be subject to that.
+See https://huggingface.co/bigcode/starcoder for more details. The jist of it is that usage for certain 'unethical' use cases is not allowed.
 
 ## Examples
 Basic Code Generation (Emphasis on basic)
