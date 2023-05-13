@@ -47,8 +47,8 @@ python src/run_server.py --model models/glados_starcoder --token <YOUR TOKEN HER
 
 | Model Path | Base Model | Parameters | License | Strengths |
 | ----- | --- | --- | --- | --- |
-| models/glados_together_20b | togethercomputer/GPT-NeoXT-Chat-Base-20B | 20 Billion | Apache 2.0 | Best Overall Performance |
-| models/glados_redpajama7b_base (default) | togethercomputer/RedPajama-INCITE-Base-7B-v0.1 | 6.9 Billion | Apache 2.0 | Most resource efficient with good performance. (Default) |
+| models/glados_together_20b | togethercomputer/GPT-NeoXT-Chat-Base-20B | 20 Billion | Apache 2.0 | Best overall performance |
+| models/glados_redpajama7b_base (default) | togethercomputer/RedPajama-INCITE-Base-7B-v0.1 | 6.9 Billion | Apache 2.0 | Most resource efficient with good performance (Default) |
 | models/glados_starcoder | bigcode/starcoder | 15.5 Billion | BigCode OpenRAIL-M v1 | Best code & related performance |
 | models/neox_20b_full (deprecated) | togethercomputer/GPT-NeoXT-Chat-Base-20B | 20 Billion | Apache 2.0 | Old version of glados_together_20b |
 
