@@ -5,7 +5,6 @@ This repo includes the models and a basic web server to chat with them.
 
 ## Motivation
 Similar models exist but often utilize LLAMA which is only available under a noncommercial license. GLaDOS avoids this by utilizing EleutherAI's/togethercomputers apach 2.0 licensed base models and CC0 data.
-
 Additionally, GLaDOS is designed to be run fully standalone so you don't need to worry about your information being collected by a third party.
 
 ## Quickstart
@@ -53,6 +52,8 @@ python src/run_server.py --model models/glados_starcoder --token <YOUR TOKEN HER
 | models/glados_starcoder | bigcode/starcoder | 15.5 Billion | BigCode OpenRAIL-M v1 | Best code & related performance |
 | models/neox_20b_full (deprecated) | togethercomputer/GPT-NeoXT-Chat-Base-20B | 20 Billion | Apache 2.0 | Old version of glados_together_20b |
 
+One the model comes online it will be available at localhost:5950 and will print a URL you can open in your browser.
+
 The first time the model runs it will download the base model, which is `togethercomputer/GPT-NeoXT-Chat-Base-20B`.
 
 GLaDOS is fine-tuned on ShareGPT data. ShareGPT data is available under a CC0 (No rights reserved) license https://huggingface.co/datasets/RyokoAI/ShareGPT52K
@@ -97,3 +98,7 @@ Q : How does the model handle formatting?
 A : GLaDOS uses a slight variation on github flavored markdown to create lists tables and code blocks. Extra tags are added by the webserver to prettify the code blocks and tweak other small things.
 
 
+=======
+# Acknowledgements:
+
+Big thanks to EleutherAI for GPT-NeoX, togethercomputer for GPT-Neoxt-chat-base and ShareGPT/RyokoAI for ShareGPT data!
