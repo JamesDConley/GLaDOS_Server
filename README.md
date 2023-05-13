@@ -67,7 +67,7 @@ If you want to leave the server running you can build the container inside tmux,
 Apache 2.0 License, see LICENSE.md
 
 Note the starcoder basemodel uses an OpenRAIL license, and usage of the starcoder based model may be subject to that.
-See https://huggingface.co/bigcode/starcoder for more details. The jist of it is that usage for certain 'unethical' use cases is not allowed.
+See https://huggingface.co/bigcode/starcoder for more details. The jist of it is that usage for certain 'unethical' use cases is disallowed.
 
 ## Examples (Old)
 Basic Code Generation (Emphasis on basic)
