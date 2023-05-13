@@ -25,7 +25,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 logger = logging.getLogger(__name__)
 
 class GLaDOS:
-    def __init__(self, path, stop_phrase="User :\n",  device="cuda", half=False, cache_dir="models/hface_cache", use_deepspeed=False, int8=False, max_length=2048, multi_gpu=False, token=None, better_transformer=False):
+    def __init__(self, path, stop_phrase="User :\n",  device="cuda", half=True, cache_dir="models/hface_cache", use_deepspeed=False, int8=False, max_length=2048, multi_gpu=False, token=None, better_transformer=False):
         """AI is creating summary for __init__
 
         Args:

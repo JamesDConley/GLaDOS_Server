@@ -1,8 +1,7 @@
 # What is GLaDOS?
-GLaDOS is a 20B model tuned to provide an open-source experience _similar_ _to_ ChatGPT. 
+GLaDOS is a family of large language models tuned to provide an open-source experience _similar_ _to_ ChatGPT. 
 
-This repo includes the model itself and a basic web server to chat with it.
-
+This repo includes the models and a basic web server to chat with them.
 
 ## Motivation
 Similar models exist but often utilize LLAMA which is only available under a noncommercial license. GLaDOS avoids this by utilizing EleutherAI's/togethercomputers apach 2.0 licensed base models and CC0 data.
@@ -63,13 +62,10 @@ If you want to leave the server running you can build the container inside tmux,
 ## License
 Apache 2.0 License, see LICENSE.md
 
-
-
-
 Note the starcoder basemodel uses an OpenRAIL license, and usage of the starcoder based model may be subject to that.
 See https://huggingface.co/bigcode/starcoder for more details. The jist of it is that usage for certain 'unethical' use cases is not allowed.
 
-## Examples
+## Examples (Old)
 Basic Code Generation (Emphasis on basic)
 ![code example](images/code_generation_example.png)
 
@@ -80,9 +76,11 @@ Brainstorming
 ![brainstorming example](images/mystery.png)
 
 ## Resource Requirements
-The current version of GLaDOS uses an FP16 model with ~20B parameters. This is runnable in just under 48GB of VRAM by modifying the generation options in run_server to use a beam width of 1. I am running this with two A6000's nvlinked together and so the default settings run on multiGPU.
+The default model is based on RedPajama 7b, and can run on 24GB Nvidia graphics Cards. Short sequences may also be possible on 16GB graphics cards, but this is untested/I wouldn't recommend it.
 
-It should be possible to use GPTQ to reduce the memory requirements to ~16GB so that the model can be run on consumer grade graphics cards.
+Other models currently require more video memory- with testing/my hosting being done on 48GB A6000 GPUs.
+
+It is possible to use GPTQ to reduce the memory about 4x, but there is no timeline for completion of this.
 
 ## Misc QnA
 
