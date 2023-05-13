@@ -1,12 +1,10 @@
 # What is GLaDOS?
-GLaDOS is an open source/permissively licensed 20B model tuned to provide an open-source experience _similar_ _to_ ChatGPT. 
+GLaDOS is a family of large language models tuned to provide an open-source experience _similar_ _to_ ChatGPT. 
 
-This repo includes the model itself and a basic web server to chat with it.
-
+This repo includes the models and a basic web server to chat with them.
 
 ## Motivation
-Similar models exist but often utilize LLAMA which is only available under a noncommercial license. GLaDOS avoids this by utilizing EleutherAI's/togethercomputers apache 2.0 licensed base models and CC0 data.
-
+Similar models exist but often utilize LLAMA which is only available under a noncommercial license. GLaDOS avoids this by utilizing EleutherAI's/togethercomputers apach 2.0 licensed base models and CC0 data.
 Additionally, GLaDOS is designed to be run fully standalone so you don't need to worry about your information being collected by a third party.
 
 ## Quickstart
@@ -27,10 +25,33 @@ Then, from inside this container run
 ```
 python src/run_server.py
 ```
-or
+This will run the server with default settings of the 7b RedPajama based GLaDOS model.
+To run a different model you can pass the model path. For example
 ```
-accelerate launch --multi_gpu --mixed_precision=fp16 --num_processes=1 src/run_server.py
+python src/run_server.py --model models/glados_together_20b
 ```
+will run the 20 billion GPT-NeoX based model.
+
+Various model options are listed below
+
+## Model Options
+Each model is fine-tuned with LoRA on the GLaDOS dataset to produce conversation, github flavored markdown.\
+Bigger models require more video memory to run, but also perform better.\
+The default model is redpajama7b_base
+
+NOTE : To run the starcoder model you need to pass a token to src/run_server.py in order to download the model.
+Ex.
+```
+python src/run_server.py --model models/glados_starcoder --token <YOUR TOKEN HERE>
+```
+
+| Model Path | Base Model | Parameters | License | Strengths |
+| ----- | --- | --- | --- | --- |
+| models/glados_together_20b | togethercomputer/GPT-NeoXT-Chat-Base-20B | 20 Billion | Apache 2.0 | Best Overall Performance |
+| models/glados_redpajama7b_base (default) | togethercomputer/RedPajama-INCITE-Base-7B-v0.1 | 6.9 Billion | Apache 2.0 | Most resource efficient with good performance. (Default) |
+| models/glados_starcoder | bigcode/starcoder | 15.5 Billion | BigCode OpenRAIL-M v1 | Best code & related performance |
+| models/neox_20b_full (deprecated) | togethercomputer/GPT-NeoXT-Chat-Base-20B | 20 Billion | Apache 2.0 | Old version of glados_together_20b |
+
 One the model comes online it will be available at localhost:5950 and will print a URL you can open in your browser.
 
 The first time the model runs it will download the base model, which is `togethercomputer/GPT-NeoXT-Chat-Base-20B`.
@@ -42,7 +63,10 @@ If you want to leave the server running you can build the container inside tmux,
 ## License
 Apache 2.0 License, see LICENSE.md
 
-## Examples
+Note the starcoder basemodel uses an OpenRAIL license, and usage of the starcoder based model may be subject to that.
+See https://huggingface.co/bigcode/starcoder for more details. The jist of it is that usage for certain 'unethical' use cases is not allowed.
+
+## Examples (Old)
 Basic Code Generation (Emphasis on basic)
 ![code example](images/code_generation_example.png)
 
@@ -53,9 +77,11 @@ Brainstorming
 ![brainstorming example](images/mystery.png)
 
 ## Resource Requirements
-The current version of GLaDOS uses an FP16 model with ~20B parameters. This is runnable in just under 48GB of VRAM by modifying the generation options in run_server to use a beam width of 1. I am running this with two A6000's nvlinked together and so the default settings run on multiGPU.
+The default model is based on RedPajama 7b, and can run on 24GB Nvidia graphics Cards. Short sequences may also be possible on 16GB graphics cards, but this is untested/I wouldn't recommend it.
 
-It should be possible to use GPTQ to reduce the memory requirements to ~16GB so that the model can be run on consumer grade graphics cards.
+Other models currently require more video memory- with testing/my hosting being done on 48GB A6000 GPUs.
+
+It is possible to use GPTQ to reduce the memory about 4x, but there is no timeline for completion of this.
 
 ## Misc QnA
 
@@ -72,7 +98,7 @@ Q : How does the model handle formatting?
 A : GLaDOS uses a slight variation on github flavored markdown to create lists tables and code blocks. Extra tags are added by the webserver to prettify the code blocks and tweak other small things.
 
 
+=======
 # Acknowledgements:
 
 Big thanks to EleutherAI for GPT-NeoX, togethercomputer for GPT-Neoxt-chat-base and ShareGPT/RyokoAI for ShareGPT data!
-

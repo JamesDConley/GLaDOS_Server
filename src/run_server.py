@@ -13,9 +13,13 @@ from waitress import serve
 # Local Imports
 from glados import GLaDOS
 from md_utils import htmlify_convo, basicify_convo
+from get_args import get_args
 
 # Conversations are stored compressed
 from compression import encode_str, decode_str, encode_obj, decode_obj
+
+# Get Args
+args = get_args()
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO)
@@ -37,7 +41,9 @@ app.secret_key = 'as89dvhuionasdjkfg'
 Session(app)
 
 LOG_FILE = "server_logs.log"
-bot = GLaDOS("models/neox_20b_full", multi_gpu=True)
+
+bot = GLaDOS(args.model, token=args.token, multi_gpu=args.multi_gpu)
+bot.add_stop_phrase("User:")
 
 @app.route('/')
 def splash_page():
@@ -91,7 +97,7 @@ def conversation():
     args = {
         "user_input" : new_text, 
         "conversation_history" : previous_convo, 
-        "kwargs" : {"max_new_tokens":512, "do_sample":True, "temperature":1.0, "num_beams":2, "no_repeat_ngram_size" : 5, "top_k" : 50}
+        "kwargs" : {"max_new_tokens":1024, "do_sample":True, "temperature":1.0, "num_beams":2, "no_repeat_ngram_size" : 5, "top_k" : 50}
     }
     #try:
     bot_response = bot.converse(**args)
