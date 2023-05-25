@@ -8,13 +8,16 @@
             margin: 0;
             padding: 0;
         }
+
         table {
             border-collapse: collapse;
         }
 
-        th, td {
+        th,
+        td {
             border: 1px solid black;
         }
+
         pre code {
             display: block;
             background: rgb(238, 236, 236);
@@ -124,13 +127,39 @@
         {% endif %}
         <div class="small_sep"></div>
         {% endfor %}
+        <div class="bot_message_box">
+            <div class="sub_content_box">
+                <div class="speaker_box">
+                    <br>
+                    <strong>GLaDOS :</strong>
+                    <br>
+                </div>
+                    <div id="output" class="markdown_box"></div>
+                    
+                </div>
+            </div>
+        </div>
+        <script>
+            window.onload = function () {
+                var source = new EventSource("/stream");
+                source.addEventListener("text_update", function (event) {
+                    var text = JSON.parse(event.data).text;
+                    document.getElementById("output").textContent = text;
+                });
+
+                fetch("/generate_text")
+                    .then(response => response.text())
+                    .then(result => console.log(result))
+                    .catch(error => console.error(error));
+            };
+        </script>
 
         <div class="textbox_container">
-        <form method="POST">
-            <textarea name="text"></textarea>
-            <div class="submit-button">
-                <input type="submit">
-            </div>
+            <form method="POST">
+                <textarea name="text"></textarea>
+                <div class="submit-button">
+                    <input type="submit">
+                </div>
         </div>
         </form>
         <form action="/clear" method="get">

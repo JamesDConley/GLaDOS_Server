@@ -14,16 +14,19 @@ warnings.filterwarnings("ignore")
 from transformers import GPTNeoForCausalLM, GPT2Tokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, AutoTokenizer
 from transformers.deepspeed import HfDeepSpeedConfig
 
+from transformers import GPTNeoXConfig, GPTNeoXModel
+
 import deepspeed
 from md_utils import fix_lines
+
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 logger = logging.getLogger(__name__)
 
-class GLaDOS:
-    def __init__(self, path, stop_phrase="User :\n",  device="cuda", half=True, cache_dir="models/hface_cache", int8=False, max_length=2048, multi_gpu=False, token=None, better_transformer=True):
-        """Load the model and tokenizer in the given mode
+class GLaDOS_LoRa:
+    def __init__(self, path, stop_phrase="User :\n",  device="cuda", half=True, cache_dir="models/hface_cache", use_deepspeed=False, int8=False, max_length=2048, multi_gpu=False, token=None, better_transformer=False):
+        """AI is creating summary for __init__
 
         Args:
             path (str): Path to the PEFT pretrained model folder
@@ -36,35 +39,54 @@ class GLaDOS:
             max_length (int, optional): The maximum number of tokens the model can handle. Defaults to 2048.
             multi_gpu (bool, optional): If true the model will utilize all available GPUs. Defaults to False.
         """
+        config = PeftConfig.from_pretrained(path)
+        base_model_path = config.base_model_name_or_path
+        
         # TODO : Make int8 work
-        if multi_gpu:
-            device_map = "auto"
-        else:
-            device_map = None
         if int8:
             # THIS IS NOT TESTED
-            model = AutoModelForCausalLM.from_pretrained(path, return_dict=True, cache_dir=cache_dir, device_map="auto", torch_dtype=torch.float16, load_in_8bit=True, use_auth_token=token)
+            model = AutoModelForCausalLM.from_pretrained(base_model_path, return_dict=True, cache_dir=cache_dir, device_map="auto", torch_dtype=torch.float16, load_in_8bit=True, use_auth_token=token)
+            # Less than half!
+            device = None
+            model = PeftModel.from_pretrained(model, path, return_dict=True, cache_dir=cache_dir, device_map="auto", torch_dtype=torch.float16, load_in_8bit=True, use_auth_token=token)
+        
+        # TODO : Make multi_gpu work (It used to work, when did it break?)
+        elif multi_gpu:
+            model = AutoModelForCausalLM.from_pretrained(base_model_path, cache_dir=cache_dir, device_map="auto", torch_dtype=torch.float16, use_auth_token=token)
+            # Model should already be half
+            half=True
+            # Device map will be set automatically above, setting another device map break it
+            model = PeftModel.from_pretrained(model, path, cache_dir=cache_dir, device_map="auto", torch_dtype=torch.float16, use_auth_token=token)
         else:
-            model = AutoModelForCausalLM.from_pretrained(path, cache_dir=cache_dir, torch_dtype=torch.float16, use_auth_token=token, device_map=device_map)
-            if device_map is None:
-                model.to(device)
+            # TODO : Create custom device map to load on single GPU without using intermediate 
+            model = AutoModelForCausalLM.from_pretrained(base_model_path, cache_dir=cache_dir, torch_dtype=torch.float16, use_auth_token=token)
             if better_transformer:
                 logger.info("Converting model to better transformer model for speedup...")
                 model = model.to_bettertransformer()
+            model = PeftModel.from_pretrained(model, path, cache_dir=cache_dir)
+            # TODO : Does this do anything? Model should already be fp16. Would be nice to remove another argument from the long list
+            if half:
+                model.half()
+                logger.debug("Halved Model")
+            if device is not None:
+                model.to(device)
+        
        
         # Make sure it's in eval mode
         model.eval()
+        
+        
 
         # Bookkeeping
         self.device = device
+        self.base_model_path = base_model_path
         self.model_path = path
         self.stop_phrase = stop_phrase
         self.max_length = max_length
         self.model = model
         
         # Setup tokenizer
-        # TODO : FIX ME : Upload tokenizer to huggingface hub under the 20b model folder so that I can revert this back to `path`
-        self.tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neox-20b", truncation_side="left", use_auth_token=token, cache_dir=cache_dir)
+        self.tokenizer = AutoTokenizer.from_pretrained(base_model_path, truncation_side="left", use_auth_token=token, cache_dir=cache_dir)
         self.tokenizer.pad_token = self.tokenizer.eos_token
         
         # Ban the model from generating certain phrases
@@ -78,6 +100,15 @@ class GLaDOS:
         self.whitespace_tokens = [self.tokenizer(words, add_special_tokens=False).input_ids for words in whitespace_words]
         self.bad_token_seqs = [self.tokenizer(words, add_special_tokens=False).input_ids for words in bad_words]
         
+        # TODO : Haven't tested this for several versions. It is probably broken.
+        # Note that even when it was working it was noticeably slower than normal generation.
+        if use_deepspeed:
+            self.ds_engine = deepspeed.init_inference(self.model,
+                                 mp_size=1,
+                                 dtype=torch.half,
+                                 checkpoint=None,
+                                 replace_with_kernel_inject=False)
+            self.model = self.ds_engine.module
 
     def add_bad_phrase(self, bad_phrase):
         """Prevent the model from using the given phrase. Note that depending on how the given text is tokenized is may still be possible for the model to generate some variation of it.
@@ -95,7 +126,7 @@ class GLaDOS:
         """
         self.stop_token_seqs.append(StopOnStr(stop_phrase, self.tokenizer))
     
-    def run_model(self, text, truncate=True, kwargs=None):
+    def run_model(self, text, kwargs=None):
         """Generate text with the model
 
         Args:
@@ -124,27 +155,16 @@ class GLaDOS:
         input_ids = self.tokenizer(text, return_tensors="pt", truncation=True, max_length=self.max_length - base_kwargs["max_new_tokens"]).input_ids.to(self.device)
         logger.debug(f"Truncated length : {len(input_ids[0])} ")
         with torch.no_grad():
-            #with torch.cuda.amp.autocast():
-            gen_tokens = self.model.generate(
-                input_ids=input_ids,
-                **base_kwargs
-            )
+            with torch.cuda.amp.autocast():
+                gen_tokens = self.model.generate(
+                    input_ids=input_ids,
+                    **base_kwargs
+                )
         # slice out the input sequence
         gen_tokens = gen_tokens[:, input_ids.shape[-1]:]
-        return self.decode_token_seq(gen_tokens[0])
+        gen_text = self.tokenizer.batch_decode(gen_tokens)[0]
+        return gen_text
 
-
-    def build_prompt(self, user_input, conversation_history=None, speaker="User", bot="GLaDOS"):
-        if conversation_history is not None:
-            speakers = [speaker, bot]
-            convo_txt = ""
-            for idx, message in enumerate(conversation_history):
-                convo_txt+= f"{speakers[idx % 2]} :\n{message}\n"
-        else:
-            convo_txt = ""
-        convo_txt += f"{speaker} :\n{user_input}"
-        convo_txt += "\nGLaDOS :\n"
-        return convo_txt
     def converse(self, user_input, conversation_history=None, kwargs=None, truncate=True, speaker="User", bot="GLaDOS"):
         """Helper function for having a conversation with the bot
 
@@ -159,18 +179,27 @@ class GLaDOS:
         Returns:
             str: The bot's response to the most recent message
         """
-        prompt = self.build_prompt(user_input, conversation_history, speaker=speaker, bot=bot)
-        logging.info(prompt)
+        if conversation_history is not None:
+            speakers = [speaker, bot]
+            convo_txt = ""
+            for idx, message in enumerate(conversation_history):
+                convo_txt+= f"{speakers[idx % 2]} :\n{message}\n"
+        else:
+            convo_txt = ""
+        convo_txt += f"{speaker} :\n{user_input}"
+        convo_txt += "\nGLaDOS :\n"
+        prompt = convo_txt
+        logging.info(convo_txt)
         
-        new_text = self.run_model(prompt, truncate=truncate, kwargs=kwargs)
+        new_text = self.run_model(prompt, kwargs=kwargs)
         logging.info(new_text)
-        return new_text
-    
-    def decode_token_seq(self, token_seq, truncate=True):
-        # TODO : The wrapping on this is a bit of a hack
-        gen_text = self.tokenizer.decode(token_seq)
+        # TODO : This doesn't work because the input gets truncated inside
+        # TODO : Is the above TODO outdated?
         if truncate:
-            gen_text = gen_text.split("<|endoftext|>")[0]
-            gen_text = gen_text.split(self.stop_phrase)[0]
-            gen_text = gen_text.split("<|endoftext|>")[0]
-        return gen_text
+            new_text = new_text.split("<|endoftext|>")[0]
+            new_text = new_text.split(self.stop_phrase)[0]
+            new_text = new_text.split("<|endoftext|>")[0]
+        return new_text
+
+
+        
