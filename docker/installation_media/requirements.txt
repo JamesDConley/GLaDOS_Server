@@ -17,8 +17,11 @@ accelerate==0.19.0
 tokenizers==0.13.2
 peft==0.1.0
 deepspeed==0.9.2
-bitsandbytes==0.38.1
+bitsandbytes==0.39.0
 optimum==1.8.6
+
+# Supporting int4 bitsandbytes
+scipy==1.10.1
 
 # Supporting deepspeed
 mpi4py==3.1.4

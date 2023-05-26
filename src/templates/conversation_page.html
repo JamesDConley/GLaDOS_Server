@@ -154,6 +154,14 @@
                         console.log(result);
                         loadPrettify(); // Call the function to load the prettify script
                     })
+                    .then(result => {
+                        // Access the button element
+                        var button = document.getElementById("generate");
+
+                        // Enable the button by removing the disabled attribute
+                        button.removeAttribute("disabled");
+                    }
+                    )
                     .catch(error => console.error(error));
             };
         
@@ -161,6 +169,8 @@
                 var prettifyScript = document.createElement("script");
                 prettifyScript.src = "https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js";
                 document.body.appendChild(prettifyScript);
+                
+
             }
         </script>
         
@@ -169,7 +179,7 @@
             <form method="POST">
                 <textarea name="text"></textarea>
                 <div class="submit-button">
-                    <input type="submit">
+                    <input id="generate" type="submit" disabled>
                 </div>
         </div>
         </form>
