@@ -144,15 +144,26 @@
                 var source = new EventSource("/stream");
                 source.addEventListener("text_update", function (event) {
                     var text = JSON.parse(event.data).text;
-                    document.getElementById("output").textContent = text;
+                    document.getElementById("output").innerHTML = text;
+                    loadPrettify(); // Call the function to load the prettify script
                 });
-
+        
                 fetch("/generate_text")
                     .then(response => response.text())
-                    .then(result => console.log(result))
+                    .then(result => {
+                        console.log(result);
+                        loadPrettify(); // Call the function to load the prettify script
+                    })
                     .catch(error => console.error(error));
             };
+        
+            function loadPrettify() {
+                var prettifyScript = document.createElement("script");
+                prettifyScript.src = "https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js";
+                document.body.appendChild(prettifyScript);
+            }
         </script>
+        
 
         <div class="textbox_container">
             <form method="POST">

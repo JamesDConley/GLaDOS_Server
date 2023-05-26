@@ -144,7 +144,9 @@ class GLaDOS:
             convo_txt = ""
         convo_txt += f"{speaker} :\n{user_input}"
         convo_txt += "\nGLaDOS :\n"
+        convo_txt = convo_txt.replace("<|endoftext|>", "")
         return convo_txt
+    
     def converse(self, user_input, conversation_history=None, kwargs=None, truncate=True, speaker="User", bot="GLaDOS"):
         """Helper function for having a conversation with the bot
 
@@ -170,6 +172,10 @@ class GLaDOS:
         # TODO : The wrapping on this is a bit of a hack
         gen_text = self.tokenizer.decode(token_seq)
         if truncate:
+            if gen_text.startswith("<|endoftext|>"):
+                gen_text = gen_text.split("<|endoftext|>")[1]
+            if gen_text.startswith(self.stop_phrase):
+                gen_text = gen_text.split(self.stop_phrase)[1]
             gen_text = gen_text.split("<|endoftext|>")[0]
             gen_text = gen_text.split(self.stop_phrase)[0]
             gen_text = gen_text.split("<|endoftext|>")[0]

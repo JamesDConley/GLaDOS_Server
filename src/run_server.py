@@ -48,7 +48,8 @@ app.register_blueprint(sse, url_prefix="/stream")
 LOG_FILE = "server_logs.log"
 
 # Testing model
-bot = GLaDOS("JamesConley/glados_together_20b_lora_merged", token=args.token, multi_gpu=True)
+bot = GLaDOS("JamesConley/glados_redpajama7b_base_lora_merged", token=args.token, multi_gpu=True)
+#bot = GLaDOS("JamesConley/glados_together_20b_lora_merged", token=args.token, multi_gpu=True)
 #bot = GLaDOS("unionai/pythia-410m-finetune-alpaca", token=args.token, multi_gpu=args.multi_gpu)
 #bot = GLaDOS(args.model, token=args.token, multi_gpu=args.multi_gpu)
 bot.add_stop_phrase("User:")
@@ -83,7 +84,7 @@ def toggle_md():
 
 @app.route("/generate_text")
 def generate_text():
-    time.sleep(0.5)
+    time.sleep(0.25)
     new_text = session.get("new_text", None)
 
     # Make sure the session has an ID
@@ -101,17 +102,36 @@ def generate_text():
     
     prompt = bot.build_prompt(new_text, previous_convo)
     use_md = session.get("use_md", True)
-    def my_callback(tokens):
+    def update_callback(tokens):
+        # TODO : Make this whole thing faster
+        # TODO : Cache text somehow to avoid decoding
         partial_text = bot.decode_token_seq(tokens, truncate=False)
+        partial_text = partial_text[len(prompt):]
+        if "GLaDOS :\n" in partial_text:
+            partial_text = partial_text.split("GLaDOS :\n")[-1]
+        partial_text = partial_text.replace("\n", "<br>")
+        # TODO : This commonmark to html conversion is the bottleneck for generation
+        sse.publish({"text": partial_text}, type="text_update")
+    def end_callback(tokens):
+        partial_text = bot.decode_token_seq(tokens, truncate=False)
+        partial_text = partial_text[len(prompt):]
         print(partial_text)
-        if not use_md:
+        if "GLaDOS :\n" in partial_text:
+            partial_text = partial_text.split("GLaDOS :\n")[-1]
+        print(f"Cleaned up Partial text : {partial_text}")
+        # TODO : This commonmark to html conversion is the bottleneck for generation
+        partial_text = partial_text.rstrip(bot.stop_phrase)
+        if use_md:
             partial_text = commonmark_to_html(partial_text)
-        sse.publish({"text": partial_text[len(prompt):]}, type="text_update")
-    cbs = CallbackStreamer(my_callback, my_callback)
+        
+            
+        sse.publish({"text": partial_text}, type="text_update")
+    
+    cbs = CallbackStreamer(update_callback, end_callback)
     args = {
         "user_input" : new_text,
         "conversation_history" : previous_convo, 
-        "kwargs" : {"max_new_tokens":512, "do_sample":False, "temperature":1.0, "num_beams":1, "no_repeat_ngram_size" : 5, "top_k" : 50, "streamer" : cbs}
+        "kwargs" : {"max_new_tokens":512, "do_sample":True, "temperature":1.0, "num_beams":1, "no_repeat_ngram_size" : 5, "top_k" : 50, "streamer" : cbs}
     }
     bot_response = bot.converse(**args)
 
@@ -119,7 +139,6 @@ def generate_text():
     logger.debug(f"{time.time()} : {request.remote_addr} : Received request with text `{new_text}`\n")
     logger.debug(f"{time.time()} : {request.remote_addr} : Previous text was `{previous_convo}`\n")
     logger.debug(f"{time.time()} : {request.remote_addr} : Model response : `{bot_response}`\n")
-    ### START OF PASTED CODE ###
     
     # Combine the full convo
     if previous_convo is None:

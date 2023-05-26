@@ -1,3 +1,11 @@
 models/
 deprecated/
 src/interim_server.py
+streaming_testing
+notebooks
+start_jlab.sh
+start.sh
+src/static
+*pycache*
+freeze.txt
+src/templates/interim.html
