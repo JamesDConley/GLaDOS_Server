@@ -48,7 +48,7 @@ app.register_blueprint(sse, url_prefix="/stream")
 LOG_FILE = "server_logs.log"
 
 # Testing model
-bot = GLaDOS("JamesConley/glados_redpajama7b_base_lora_merged", token=args.token, multi_gpu=True)
+bot = GLaDOS("JamesConley/glados_redpajama7b_base_lora_merged", token=args.token, multi_gpu=True, int4=True)
 #bot = GLaDOS("JamesConley/glados_together_20b_lora_merged", token=args.token, multi_gpu=True)
 #bot = GLaDOS("unionai/pythia-410m-finetune-alpaca", token=args.token, multi_gpu=args.multi_gpu)
 #bot = GLaDOS(args.model, token=args.token, multi_gpu=args.multi_gpu)

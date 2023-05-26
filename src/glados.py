@@ -11,7 +11,7 @@ from peft import PeftModel, PeftConfig
 
 warnings.filterwarnings("ignore")
 
-from transformers import GPTNeoForCausalLM, GPT2Tokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig 
 from transformers.deepspeed import HfDeepSpeedConfig
 
 import deepspeed
@@ -22,7 +22,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 logger = logging.getLogger(__name__)
 
 class GLaDOS:
-    def __init__(self, path, stop_phrase="User :\n",  device="cuda", half=True, cache_dir="models/hface_cache", int8=False, max_length=2048, multi_gpu=False, token=None, better_transformer=True):
+    def __init__(self, path, stop_phrase="User :\n",  device="cuda", half=True, cache_dir="models/hface_cache", int8=False, int4=False, max_length=2048, multi_gpu=False, token=None, better_transformer=True):
         """Load the model and tokenizer in the given mode
 
         Args:
@@ -44,6 +44,20 @@ class GLaDOS:
         if int8:
             # THIS IS NOT TESTED
             model = AutoModelForCausalLM.from_pretrained(path, return_dict=True, cache_dir=cache_dir, device_map="auto", torch_dtype=torch.float16, load_in_8bit=True, use_auth_token=token)
+        elif int4:
+            model = AutoModelForCausalLM.from_pretrained(path,
+                return_dict=True, 
+                cache_dir=cache_dir,
+                load_in_4bit=True,
+                device_map='auto',
+                
+                torch_dtype=torch.bfloat16,
+                quantization_config=BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    bnb_4bit_compute_dtype=torch.bfloat16,
+                    bnb_4bit_use_double_quant=True,
+                    bnb_4bit_quant_type='nf4'
+                ))#max_memory=max_memory,
         else:
             model = AutoModelForCausalLM.from_pretrained(path, cache_dir=cache_dir, torch_dtype=torch.float16, use_auth_token=token, device_map=device_map)
             if device_map is None:

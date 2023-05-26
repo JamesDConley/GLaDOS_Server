@@ -14,3 +14,8 @@ RUN bash install_python_and_deps.sh
 # (Needed for deepspeed)
 RUN apt-get install mpich --yes
 RUN python -m pip install -r requirements.txt
+RUN apt install git --yes
+
+RUN python -m pip install --upgrade git+https://github.com/huggingface/transformers.git
+RUN python -m pip install --upgrade git+https://github.com/huggingface/peft.git
+RUN python -m pip install --upgrade git+https://github.com/huggingface/accelerate.git
