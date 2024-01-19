@@ -3,6 +3,19 @@ GLaDOS is a family of large language models tuned to provide an open-source expe
 
 This repo includes the models and a basic web server to chat with them.
 
+## Abandonment
+GLaDOS has been abandoned. The advancement of open-source models (and UIs, and hosting) quickly outpaced what I could accomplish on a few GPUs locally.
+### Hosting
+If you're looking for a local LLM I highly recommend hosting via vLLM (Which even supports GPTQ/AWQ for that 4-bit quantization I never finished!)
+
+### UI
+For a UI chatbot-ui is great, and can be made to work with custom models in vLLM with just a bit of tinkering.
+
+### Models
+Models are changing even faster than these other two, but I'm particularly fond of Mixtral based models (I currently run a recent dolphin fine-tuned version), Phind-Codellama for coding, and mistral.
+
+Mistral.AI models are apache 2.0 and Llama2/Codellama models are under a bit more complicated license, but generally usage is allowed, even commercially.
+
 ## Motivation
 Similar models exist but often utilize LLAMA which is only available under a noncommercial license. GLaDOS avoids this by utilizing EleutherAI's/togethercomputers apache 2.0 licensed base models and CC0 data.
 Additionally, GLaDOS is designed to be run fully standalone so you don't need to worry about your information being collected by a third party.
